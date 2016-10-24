@@ -14,11 +14,8 @@ public class PlayerMovement : MonoBehaviour {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     public float yaw = 0;           //Mouse X
     
-    
-
 	void Start () {
         rb = GetComponent<Rigidbody>();
-        //Physics.gravity = new Vector3(0, -1000f, 0);
     }
     // Update is called once per frame
     void Update() {
@@ -29,7 +26,7 @@ public class PlayerMovement : MonoBehaviour {
     bool isGrounded() {
         Ray ray = new Ray(transform.position,Vector3.down);
         RaycastHit raycastHit;
-        Physics.Raycast(ray, out raycastHit, 1);
+        Physics.Raycast(ray, out raycastHit, 1.1f);
 
         if (raycastHit.collider != null && raycastHit.collider.tag == "floor") {
             print("isGrounded is true");
@@ -45,7 +42,7 @@ public class PlayerMovement : MonoBehaviour {
     {
         if (Input.GetKey("space") && isGrounded())
         {
-            rb.AddForce(0, 1000, 0);
+            rb.AddForce(new Vector3(0,10,0),ForceMode.Impulse);
         }
     }
 
@@ -54,21 +51,16 @@ public class PlayerMovement : MonoBehaviour {
         transform.localRotation = Quaternion.Euler(0, yaw, 0);
     }
     void playerMovement() {
-        //runs whatever is in here every frame
-        //so if we we had a game that runs at 60FPS (frames per second)
-        //the code within Update() will execute 60 times a second
         horizontalKeyboard = Input.GetAxis("Horizontal");
         verticalKeybaord = Input.GetAxis("Vertical");
-        //movement 
-        forwardMovement = new Vector3(0, 0, verticalKeybaord * moveSpeed);
-        sidewaysMovement = new Vector3(horizontalKeyboard * moveSpeed, 0, 0);
-        //add forward and sideways movement and set that to total movement
+
+        forwardMovement = verticalKeybaord * transform.forward;
+        sidewaysMovement = horizontalKeyboard * transform.right;
+
         totalMovement = sidewaysMovement + forwardMovement;
-        //Remember to uncomment 2 lines below
-        totalMovement = transform.TransformDirection(totalMovement);
-        totalMovement = new Vector3(totalMovement.x, rb.velocity.y, totalMovement.z);
-        //set rb.velocity = totalMovement
-        rb.velocity = totalMovement;
+        //totalMovement = transform.TransformDirection(totalMovement);
+
+        rb.AddForce(totalMovement * moveSpeed);
 
         if (Input.GetKey("q"))
         {
@@ -81,3 +73,32 @@ public class PlayerMovement : MonoBehaviour {
         }
     }
 }
+
+//void playerMovement()
+//{
+//    //runs whatever is in here every frame
+//    //so if we we had a game that runs at 60FPS (frames per second)
+//    //the code within Update() will execute 60 times a second
+//    horizontalKeyboard = Input.GetAxis("Horizontal");
+//    verticalKeybaord = Input.GetAxis("Vertical");
+//    //movement 
+//    forwardMovement = new Vector3(0, 0, verticalKeybaord);
+//    sidewaysMovement = new Vector3(horizontalKeyboard, 0, 0);
+//    //add forward and sideways movement and set that to total movement
+//    totalMovement = sidewaysMovement + forwardMovement;
+//    //Remember to uncomment 2 lines below
+//    totalMovement = transform.TransformDirection(totalMovement);
+//    totalMovement = new Vector3(totalMovement.x, rb.velocity.y, totalMovement.z);
+//    //set rb.velocity = totalMovement
+//    rb.velocity = totalMovement * moveSpeed;
+
+//    if (Input.GetKey("q"))
+//    {
+//        print("Q is pressed");
+//        moveSpeed = 10;
+//    }
+//    else
+//    {
+//        moveSpeed = 5;
+//    }
+//}
