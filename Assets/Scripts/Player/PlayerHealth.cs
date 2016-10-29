@@ -5,11 +5,13 @@ public class PlayerHealth : MonoBehaviour {
     int maxHealth = 100;
     public int currentHealth;
     int healthPerTick = 5;
+    public float currentTime;
 
     public float timeTillPlayerCanRegen = 4;
     public float lastTimeTakenDamage;
 
-    bool RegenHealthAfterDelay_isRunning = false;
+    bool CheckWhen2Regen_isRunning = false;
+    bool RegenHealth_isRunning = false;
 
     //for debugging
     public float timeSinceLastDamageTaken;
@@ -25,39 +27,33 @@ public class PlayerHealth : MonoBehaviour {
             TakeDamage(10);
         }
         timeSinceLastDamageTaken = Time.time - lastTimeTakenDamage;
+        currentTime = Time.time;
 
     }
 
     //When RegenHealth is called, start incrementing health
     IEnumerator RegenHealth() {
-        print("Regenning Health");
-        while(currentHealth < maxHealth && timeSinceLastDamageTaken > timeTillPlayerCanRegen) {
-            if ((maxHealth - currentHealth) < healthPerTick) {
-                currentHealth += (maxHealth - currentHealth);
-            } else {
-                currentHealth += healthPerTick;
-            }
+        RegenHealth_isRunning = true;
+        yield return new WaitForSeconds(1);
+        print("Health regen started");
+        while(currentHealth < maxHealth && Time.time - lastTimeTakenDamage > timeTillPlayerCanRegen) {  //Do not use timeSinceLastDamageTaken, instead use Time.time - lastTimeTakenDamage
+            currentHealth += healthPerTick;
             yield return new WaitForSeconds(1);
         }
+        RegenHealth_isRunning = false;
+        print("Health regen stopped");
     }
 
-    //IEnumerator RegenHealthAfterDelay(float delay) {
-    //    RegenHealthAfterDelay_isRunning = true;
-    //    yield return new WaitForSeconds(delay);
-    //    if ((Time.time - lastTimeTakenDamage) > timeTillPlayerCanRegen) {
-    //        RegenHealth();
-    //    }
-    //    RegenHealthAfterDelay_isRunning = false;
-    //}
-
-    IEnumerator CheckWhen2Regen(float delay) {
+    IEnumerator CheckWhen2Regen() {
         print("Starting CheckWhen2Regen");
         //keep checking timeCounter. If time counter > timetillplayer can regen. Call RegenHealth()
-        RegenHealthAfterDelay_isRunning = true;
+        CheckWhen2Regen_isRunning = true;
         while (true) {
-            if(timeSinceLastDamageTaken > timeTillPlayerCanRegen) {
-                StartCoroutine(RegenHealth());
-                RegenHealthAfterDelay_isRunning = false;
+            if(Time.time - lastTimeTakenDamage > timeTillPlayerCanRegen) {              //Do not use timeSinceLastDamageTaken, instead use Time.time - lastTimeTakenDamage
+                if (RegenHealth_isRunning == false) StartCoroutine(RegenHealth());
+                CheckWhen2Regen_isRunning = false;
+                print("Starting Health regen");
+                print("Stopping CheckWhen2Regen");
                 yield break;
             }
             yield return new WaitForSeconds(1);
@@ -72,7 +68,7 @@ public class PlayerHealth : MonoBehaviour {
         if(currentHealth <= 0) {
             Destroy(gameObject);
         }
-        if(RegenHealthAfterDelay_isRunning == false) StartCoroutine(CheckWhen2Regen(5));
+        if(CheckWhen2Regen_isRunning == false) StartCoroutine(CheckWhen2Regen());
        
     }
 }
