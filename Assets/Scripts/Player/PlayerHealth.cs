@@ -3,21 +3,20 @@ using System.Collections;
 
 public class PlayerHealth : MonoBehaviour {
     int maxHealth = 100;
-    int currentHealth;
+    public int currentHealth;
     int healthPerTick = 5;
 
     public float timeTillPlayerCanRegen = 4;
-    float lastTimeTakenDamage;
+    public float lastTimeTakenDamage;
 
     bool RegenHealthAfterDelay_isRunning = false;
 
     //for debugging
-    public float timeCounter;
+    public float timeSinceLastDamageTaken;
     
 	// Use this for initialization
 	void Start () {
         currentHealth = maxHealth;
-        timeCounter = Time.time - lastTimeTakenDamage;
 	}
 	
 	// Update is called once per frame
@@ -25,11 +24,14 @@ public class PlayerHealth : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.B)) {
             TakeDamage(10);
         }
-	}
+        timeSinceLastDamageTaken = Time.time - lastTimeTakenDamage;
+
+    }
 
     //When RegenHealth is called, start incrementing health
     IEnumerator RegenHealth() {
-        while(currentHealth < maxHealth && (Time.time - lastTimeTakenDamage) > timeTillPlayerCanRegen) {
+        print("Regenning Health");
+        while(currentHealth < maxHealth && timeSinceLastDamageTaken > timeTillPlayerCanRegen) {
             if ((maxHealth - currentHealth) < healthPerTick) {
                 currentHealth += (maxHealth - currentHealth);
             } else {
@@ -39,13 +41,27 @@ public class PlayerHealth : MonoBehaviour {
         }
     }
 
-    IEnumerator RegenHealthAfterDelay(float delay) {
+    //IEnumerator RegenHealthAfterDelay(float delay) {
+    //    RegenHealthAfterDelay_isRunning = true;
+    //    yield return new WaitForSeconds(delay);
+    //    if ((Time.time - lastTimeTakenDamage) > timeTillPlayerCanRegen) {
+    //        RegenHealth();
+    //    }
+    //    RegenHealthAfterDelay_isRunning = false;
+    //}
+
+    IEnumerator CheckWhen2Regen(float delay) {
+        print("Starting CheckWhen2Regen");
+        //keep checking timeCounter. If time counter > timetillplayer can regen. Call RegenHealth()
         RegenHealthAfterDelay_isRunning = true;
-        yield return new WaitForSeconds(delay);
-        if ((Time.time - lastTimeTakenDamage) > timeTillPlayerCanRegen) {
-            RegenHealth();
+        while (true) {
+            if(timeSinceLastDamageTaken > timeTillPlayerCanRegen) {
+                StartCoroutine(RegenHealth());
+                RegenHealthAfterDelay_isRunning = false;
+                yield break;
+            }
+            yield return new WaitForSeconds(1);
         }
-        RegenHealthAfterDelay_isRunning = false;
     }
 
     public void TakeDamage(int dmg) {
@@ -56,7 +72,7 @@ public class PlayerHealth : MonoBehaviour {
         if(currentHealth <= 0) {
             Destroy(gameObject);
         }
-        RegenHealthAfterDelay(5);
+        if(RegenHealthAfterDelay_isRunning == false) StartCoroutine(CheckWhen2Regen(5));
        
     }
 }
